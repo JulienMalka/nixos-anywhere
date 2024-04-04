@@ -204,6 +204,7 @@ nix_build() {
     --print-out-paths \
     --no-link \
     "${nix_options[@]}" \
+    -f default.nix
     "$@"
 }
 
@@ -247,10 +248,11 @@ if [[ -n ${flake-} ]]; then
         --no-link \
         -L \
         "${nix_options[@]}" \
-        "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.installTest"
+        -f default.nix \
+        "nixosConfigurations.\"${flakeAttr}\".config.system.build.installTest"
     fi
-    disko_script=$(nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript")
-    nixos_system=$(nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
+    disko_script=$(nix_build "nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript")
+    nixos_system=$(nix_build "nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel")
   fi
 elif [[ -n ${disko_script-} ]] && [[ -n ${nixos_system-} ]]; then
   if [[ -n ${vm_test-} ]]; then
@@ -432,7 +434,7 @@ elif [[ ${build_on_remote-n} == "y" ]]; then
   nix_copy --to "ssh-ng://$ssh_connection" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
     --derivation --no-check-sigs
   disko_script=$(
-    nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
+    nix_build "nixosConfigurations.\"${flakeAttr}\".config.system.build.diskoScript" \
       --eval-store auto --store "ssh-ng://$ssh_connection?ssh-key=$ssh_key_dir/nixos-anywhere"
   )
 fi
@@ -456,7 +458,7 @@ elif [[ ${build_on_remote-n} == "y" ]]; then
   nix_copy --to "ssh-ng://$ssh_connection?remote-store=local?root=/mnt" "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
     --derivation --no-check-sigs
   nixos_system=$(
-    nix_build "${flake}#nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
+    nix_build "nixosConfigurations.\"${flakeAttr}\".config.system.build.toplevel" \
       --eval-store auto --store "ssh-ng://$ssh_connection?ssh-key=$ssh_key_dir/nixos-anywhere&remote-store=local?root=/mnt"
   )
 fi
