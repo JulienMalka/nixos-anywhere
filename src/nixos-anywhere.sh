@@ -204,7 +204,7 @@ nix_build() {
     --print-out-paths \
     --no-link \
     "${nix_options[@]}" \
-    -f default.nix
+    -f default.nix \
     "$@"
 }
 
